@@ -17,7 +17,6 @@ const getUsers = (req, res) => {
     });
 };
 
-
 // POST /users
 const createUser = (req, res) => {
   const { name, avatar } = req.body;
@@ -27,9 +26,13 @@ const createUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: "Invalid user data" });
+        return res
+          .status(BAD_REQUEST_STATUS_CODE)
+          .send({ message: "Invalid user data" });
       }
-      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: "Internal server error" });
+      return res
+        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+        .send({ message: "Internal server error" });
     });
 };
 
@@ -42,15 +45,19 @@ const getUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: "Invalid user ID format" });
+        return res
+          .status(BAD_REQUEST_STATUS_CODE)
+          .send({ message: "Invalid user ID format" });
       }
       if (err.message === "NotFound") {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: "User not found" });
+        return res
+          .status(NOT_FOUND_STATUS_CODE)
+          .send({ message: "User not found" });
       }
-      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: err.message });
+      return res
+        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+        .send({ message: err.message });
     });
-
-  };
-
+};
 
 module.exports = { getUsers, createUser, getUser };

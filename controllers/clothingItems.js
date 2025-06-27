@@ -1,30 +1,32 @@
-const ClothingItem = require('../models/clothingItem');
+const ClothingItem = require("../models/clothingItem");
 const {
   INTERNAL_SERVER_ERROR_STATUS_CODE,
   BAD_REQUEST_STATUS_CODE,
   NOT_FOUND_STATUS_CODE,
   FORBIDDEN_STATUS_CODE,
-} = require('../utils/errors');
+} = require("../utils/errors");
 
 const likeItem = (req, res) => {
   const { itemId } = req.params;
   const userId = req.user._id;
 
-  ClothingItem.findByIdAndUpdate(
+  return ClothingItem.findByIdAndUpdate(
     itemId,
     { $addToSet: { likes: userId } },
     { new: true }
   )
     .then((item) => {
       if (!item) {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Clothing item not found' });
+        return res
+          .status(NOT_FOUND_STATUS_CODE)
+          .send({ message: "Clothing item not found" });
       }
-      res.status(200).send(item);
+      return res.status(200).send(item);
     })
     .catch((err) => {
       console.error(err);
-      res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
-        message: 'Failed to like clothing item',
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
+        message: "Failed to like clothing item",
         error: err.message,
       });
     });
@@ -34,24 +36,28 @@ const unlikeItem = (req, res) => {
   const { itemId } = req.params;
   const userId = req.user._id;
 
-  ClothingItem.findByIdAndUpdate(
+  return ClothingItem.findByIdAndUpdate(
     itemId,
     { $pull: { likes: userId } },
     { new: true }
   )
     .then((item) => {
       if (!item) {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Clothing item not found' });
+        return res
+          .status(NOT_FOUND_STATUS_CODE)
+          .send({ message: "Clothing item not found" });
       }
-      res.status(200).send(item);
+      return res.status(200).send(item);
     })
     .catch((err) => {
       console.error(err);
-      if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Invalid item ID format' });
+      if (err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST_STATUS_CODE)
+          .send({ message: "Invalid item ID format" });
       }
-      res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
-        message: 'Failed to unlike clothing item',
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
+        message: "Failed to unlike clothing item",
         error: err.message,
       });
     });
@@ -61,60 +67,65 @@ const deleteItem = (req, res) => {
   const { itemId } = req.params;
   const userId = req.user._id;
 
-  ClothingItem.findById(itemId)
+  return ClothingItem.findById(itemId)
     .then((item) => {
       if (!item) {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Clothing item not found' });
-
-    }
-    if (item.owner.toString() !== userId) {
-      return res.status(FORBIDDEN_STATUS_CODE).send({ message: 'You can only delete your own items' });
-    }
-    return ClothingItem.findByIdAndDelete(itemId).then(() => res.status(200).send(item));
+        return res
+          .status(NOT_FOUND_STATUS_CODE)
+          .send({ message: "Clothing item not found" });
+      }
+      if (item.owner.toString() !== userId) {
+        return res
+          .status(FORBIDDEN_STATUS_CODE)
+          .send({ message: "You can only delete your own items" });
+      }
+      return ClothingItem.findByIdAndDelete(itemId).then(() =>
+        res.status(200).send(item)
+      );
     })
     .catch((err) => {
       console.error(err);
-      if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Invalid item ID format' });
+      if (err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST_STATUS_CODE)
+          .send({ message: "Invalid item ID format" });
       }
-      res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
-        message: 'Failed to delete clothing item',
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
+        message: "Failed to delete clothing item",
         error: err.message,
       });
     });
 };
 
-const getItems = (req, res) => {
-  ClothingItem.find({})
+const getItems = (req, res) => ClothingItem.find({})
     .then((items) => res.status(200).send(items))
     .catch((err) => {
       console.error(err);
-      res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
-        message: 'Failed to retrieve clothing items',
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
+        message: "Failed to retrieve clothing items",
         error: err.message,
       });
     });
-};
-
 
 const createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
   const owner = req.user._id;
 
-  ClothingItem.create({ name, weather, imageUrl, owner })
+  return ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => res.status(201).send(item))
     .catch((err) => {
-   console.error(err);
+      console.error(err);
 
-    if (err.name === 'ValidationError') {
-      return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Invalid clothing item data' });
-    }
-    return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
-      message: 'Failed to create clothing item',
-      error: err.message
-  });
-});
-
+      if (err.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST_STATUS_CODE)
+          .send({ message: "Invalid clothing item data" });
+      }
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
+        message: "Failed to create clothing item",
+        error: err.message,
+      });
+    });
 };
 
 module.exports = {
