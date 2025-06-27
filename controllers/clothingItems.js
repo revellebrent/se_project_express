@@ -25,6 +25,11 @@ const likeItem = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
+      if (err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST_STATUS_CODE)
+          .send({ message: "Invalid item ID format" });
+      }
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
         message: "Failed to like clothing item",
         error: err.message,
