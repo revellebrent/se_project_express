@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const mainRouter = require("./routes/index");
+const { NOT_FOUND_STATUS_CODE } = require("./utils/errors");
 
 const app = express();
 const { PORT = 3001 } = process.env;
@@ -28,7 +29,7 @@ mongoose
 app.use("/", mainRouter);
 
 app.use((req, res) => {
-  res.status(404).send({ message: "Router Not Found" });
+  res.status(NOT_FOUND_STATUS_CODE).send({ message: "Router Not Found" });
 });
 
 app.listen(PORT, () => {

@@ -21,7 +21,7 @@ const likeItem = (req, res) => {
           .status(NOT_FOUND_STATUS_CODE)
           .send({ message: "Clothing item not found" });
       }
-      return res.status(200).send(item);
+      return res.send(item);
     })
     .catch((err) => {
       console.error(err);
@@ -32,7 +32,6 @@ const likeItem = (req, res) => {
       }
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
         message: "Failed to like clothing item",
-        error: err.message,
       });
     });
 };
@@ -52,7 +51,7 @@ const unlikeItem = (req, res) => {
           .status(NOT_FOUND_STATUS_CODE)
           .send({ message: "Clothing item not found" });
       }
-      return res.status(200).send(item);
+      return res.send(item);
     })
     .catch((err) => {
       console.error(err);
@@ -63,7 +62,6 @@ const unlikeItem = (req, res) => {
       }
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
         message: "Failed to unlike clothing item",
-        error: err.message,
       });
     });
 };
@@ -85,7 +83,7 @@ const deleteItem = (req, res) => {
           .send({ message: "You can only delete your own items" });
       }
       return ClothingItem.findByIdAndDelete(itemId).then(() =>
-        res.status(200).send(item)
+        res.send(item)
       );
     })
     .catch((err) => {
@@ -97,18 +95,17 @@ const deleteItem = (req, res) => {
       }
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
         message: "Failed to delete clothing item",
-        error: err.message,
       });
     });
 };
 
-const getItems = (req, res) => ClothingItem.find({})
-    .then((items) => res.status(200).send(items))
+const getItems = (req, res) =>
+  ClothingItem.find({})
+    .then((items) => res.send(items))
     .catch((err) => {
       console.error(err);
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
         message: "Failed to retrieve clothing items",
-        error: err.message,
       });
     });
 
@@ -128,7 +125,6 @@ const createItem = (req, res) => {
       }
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
         message: "Failed to create clothing item",
-        error: err.message,
       });
     });
 };
