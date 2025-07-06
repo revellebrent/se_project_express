@@ -13,7 +13,11 @@ const {
 // GET /users
 const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.send(users))
+    .then((users) => res.send(users.map(user => ({
+  _id: user._id,
+  name: user.name,
+  avatar: user.avatar,
+}))))
     .catch((err) => {
       console.error(err);
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
@@ -30,7 +34,12 @@ const getCurrentUser = async (req, res) => {
         .status(NOT_FOUND_STATUS_CODE)
         .send({ message: "User not found" });
     }
-    return res.send(user);
+    return res.send({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+    });
   } catch (err) {
     console.error(err);
     return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
@@ -55,12 +64,10 @@ const createUser = async (req, res) => {
         .send({ message: "Email already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 8);
-
-    const user = new User({ name, avatar, email, password: hashedPassword });
+    const user = new User({ name, avatar, email, password });
     await user.save();
     return res.status(201).send({
-      message: "User created successfully",
+      _id: user._id,
       name: user.name,
       email: user.email,
       avatar: user.avatar,
@@ -84,7 +91,7 @@ const login = async (req, res) => {
     const user = await User.findUserByCredentials(email, password);
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    return res.send({ token });
+    return res.status(200).send({ token });
   } catch (err) {
     console.error(err);
     return res.status(BAD_REQUEST_STATUS_CODE).send({
@@ -98,7 +105,11 @@ const getUser = (req, res) => {
   const { userId } = req.params;
   User.findById(userId)
     .orFail(() => new Error("NotFound"))
-    .then((user) => res.send(user))
+    .then((user) => res.send({
+  _id: user._id,
+  name: user.name,
+  avatar: user.avatar,
+}))
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
@@ -130,7 +141,12 @@ const updateProfile = async (req, res) => {
         .status(NOT_FOUND_STATUS_CODE)
         .send({ message: "User not found" });
     }
-    return res.send(user);
+    return res.send({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+    });
   } catch (err) {
     console.error(err);
     if (err.name === "ValidationError") {
