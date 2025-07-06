@@ -4,9 +4,7 @@ const { JWT_SECRET } = require("../utils/config");
 const auth = (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization) {
-    return res
-      .status(401)
-      .send({ message: "Authorization header is required" });
+    return res.status(401).send({ message: "Authorization header is required" });
   }
 
   const token = authorization.replace("Bearer ", "");
@@ -14,9 +12,8 @@ const auth = (req, res, next) => {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = payload;
 
-    next();
+    return next();
   } catch (error) {
-    console.error(error);
     return res.status(401).send({ message: "Invalid or expired token" });
   }
 };

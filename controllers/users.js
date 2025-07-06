@@ -1,6 +1,6 @@
-const User = require("../models/user");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 const { JWT_SECRET } = require("../utils/config");
 
 const {
@@ -30,7 +30,7 @@ const getCurrentUser = async (req, res) => {
         .status(NOT_FOUND_STATUS_CODE)
         .send({ message: "User not found" });
     }
-    res.send(user);
+    return res.send(user);
   } catch (err) {
     console.error(err);
     return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
@@ -54,9 +54,12 @@ const createUser = async (req, res) => {
         .status(CONFLICT_STATUS_CODE)
         .send({ message: "Email already exists" });
     }
-    const user = new User({ name, avatar, email, password });
+
+    const hashedPassword = await bcrypt.hash(password, 8);
+
+    const user = new User({ name, avatar, email, password: hashedPassword });
     await user.save();
-    res.status(201).send({
+    return res.status(201).send({
       message: "User created successfully",
       name: user.name,
       email: user.email,
@@ -81,7 +84,7 @@ const login = async (req, res) => {
     const user = await User.findUserByCredentials(email, password);
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    res.send({ token });
+    return res.send({ token });
   } catch (err) {
     console.error(err);
     return res.status(BAD_REQUEST_STATUS_CODE).send({
@@ -127,7 +130,7 @@ const updateProfile = async (req, res) => {
         .status(NOT_FOUND_STATUS_CODE)
         .send({ message: "User not found" });
     }
-    res.send(user);
+    return res.send(user);
   } catch (err) {
     console.error(err);
     if (err.name === "ValidationError") {

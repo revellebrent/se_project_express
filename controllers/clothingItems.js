@@ -113,30 +113,23 @@ const createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
   if (!name || !weather || !imageUrl) {
-    return res
-      .status(BAD_REQUEST_STATUS_CODE).json({
+    return res.status(BAD_REQUEST_STATUS_CODE).json({
         message: "Name, weather, and imageUrl are required fields",
       });
   }
   const owner = req.user._id;
 
   return ClothingItem.create({ name, weather, imageUrl, owner })
-    .then((item) => {
-      return res.status(201).json(item);
-    })
+    .then((item) => res.status(201).json(item))
     .catch((err) => {
       console.error(err);
 
       if (err.name === "ValidationError") {
-        const errors = Object.keys(err.errors).map((key) => {
-          return { field: key, message: err.errors[key].message };
+        const errors = Object.keys(err.errors).map((key) => ({ field: key, message: err.errors[key].message }));
+        return res.status(BAD_REQUEST_STATUS_CODE).json({
+          message: "Invalid clothing item data",
+          errors,
         });
-        return res
-          .status(BAD_REQUEST_STATUS_CODE)
-          .json({
-            message: "Invalid clothing item data",
-            errors: errors,
-          });
       }
       return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).json({
         message: "Failed to create clothing item",
