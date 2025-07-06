@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const auth = require("../middlewares/auth");
 
 const {
   createItem,
@@ -9,9 +10,13 @@ const {
 } = require("../controllers/clothingItems");
 
 router.get("/", getItems);
-router.delete("/:itemId", deleteItem);
-router.post("/", createItem);
 
+// Apply authentication middleware to all routes below
+// This ensures that all routes in this file require authentication
+router.use(auth);
+
+router.post("/", createItem);
+router.delete("/:itemId", deleteItem);
 router.put("/:itemId/likes", likeItem);
 router.delete("/:itemId/likes", unlikeItem);
 

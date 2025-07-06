@@ -1,3 +1,6 @@
+# Ignore .env file
+.env
+
 # Logs
 logs
 *.log
@@ -13,3 +16,4 @@ node_modules
 .DS_Store
 .idea
 .vscode
+
