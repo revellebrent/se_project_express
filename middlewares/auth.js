@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../utils/config");
+const { UNAUTHORIZED_STATUS_CODE } = require("../utils/errors");
 
 const auth = (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith("Bearer ")) {
-    return res.status(401).send({ message: "Authorization header must be in the format: Bearer <token>" });
+    return res.status(UNAUTHORIZED_STATUS_CODE).send({ message: "Authorization header must be in the format: Bearer <token>" });
   }
 
   const token = authorization.replace("Bearer ", "").trim();
@@ -13,7 +14,7 @@ const auth = (req, res, next) => {
     req.user = payload;
     return next();
   } catch (error) {
-    return res.status(401).send({ message: "Invalid or expired token" });
+    return res.status(UNAUTHORIZED_STATUS_CODE).send({ message: "Invalid or expired token" });
   }
 };
 

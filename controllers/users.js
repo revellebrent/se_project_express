@@ -7,23 +7,8 @@ const {
   NOT_FOUND_STATUS_CODE,
   INTERNAL_SERVER_ERROR_STATUS_CODE,
   CONFLICT_STATUS_CODE,
+  UNAUTHORIZED_STATUS_CODE,
 } = require("../utils/errors");
-
-// GET /users
-const getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.send(users.map(user => ({
-  _id: user._id,
-  name: user.name,
-  avatar: user.avatar,
-}))))
-    .catch((err) => {
-      console.error(err);
-      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({
-        message: "Internal server error",
-      });
-    });
-};
 
 const getCurrentUser = async (req, res) => {
   try {
@@ -86,45 +71,25 @@ const createUser = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST_STATUS_CODE)
+      .send({ message: "Email and password are required" });
+  }
   try {
     const user = await User.findUserByCredentials(email, password);
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    return res.status(200).send({ token });
+    return res.send({ token });
   } catch (err) {
     console.error(err);
-    return res.status(BAD_REQUEST_STATUS_CODE).send({
-      message: "Invalid email or password",
-    });
+    if (err.message === "Incorrect email or password") {
+      return res.status(UNAUTHORIZED_STATUS_CODE).send({
+        message: "Invalid email or password",
+      });
+    }
+    return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: "Internal server error" });
   }
-};
-
-// GET /users/:userId
-const getUser = (req, res) => {
-  const { userId } = req.params;
-  User.findById(userId)
-    .orFail(() => new Error("NotFound"))
-    .then((user) => res.send({
-  _id: user._id,
-  name: user.name,
-  avatar: user.avatar,
-}))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST_STATUS_CODE)
-          .send({ message: "Invalid user ID format" });
-      }
-      if (err.message === "NotFound") {
-        return res
-          .status(NOT_FOUND_STATUS_CODE)
-          .send({ message: "User not found" });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: err.message });
-    });
 };
 
 const updateProfile = async (req, res) => {
@@ -160,10 +125,8 @@ const updateProfile = async (req, res) => {
 };
 
 module.exports = {
-  getUsers,
   createUser,
   login,
-  getUser,
   getCurrentUser,
   updateProfile,
 };
