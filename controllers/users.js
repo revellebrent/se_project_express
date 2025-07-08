@@ -83,12 +83,17 @@ const login = async (req, res) => {
     return res.send({ token });
   } catch (err) {
     console.error(err);
-    if (err.message === "Incorrect email or password") {
+    if (
+      err.message === "Incorrect email or password" ||
+      err.message === "Invalid email or password"
+    ) {
       return res.status(UNAUTHORIZED_STATUS_CODE).send({
         message: "Invalid email or password",
       });
     }
-    return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: "Internal server error" });
+    return res
+      .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+      .send({ message: "Internal server error" });
   }
 };
 
