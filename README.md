@@ -1,53 +1,189 @@
-# WTWR (What to Wear?): Back End
+# WTWR (What To Wear?) — Backend API
 
-This is the back-end server for the WTWR (What to Wear?) project. It handles all API requests related to clothing items and user accounts, including CRUD operations, likes, and authorization (currently mocked for developing). Built with **Express** and **MongoDB**.
+## Express + MongoDB REST API for the WTWR app. Handles users, authentication, and clothing items (CRUD + likes), with validation, logging, and production deployment (nginx + PM2 + HTTPS).
+
+## Live
+
+- Frontend: https://wardrobe411.csproject.org
+
+- API base URL: https://api.wardrobe411.csproject.org
+
+- Frontend repo (public): https://github.com/revellebrent/se_project_react
+
+- 🧪 Crash test (for reviewer): GET https://api.wardrobe411.csproject.org/crash-test
+Intentionally crashes the Node process; PM2 auto-restarts it. (Removed after review.)
 
 ## Features
 
-- Full CRUD for clothing Items
-- Like/unlike system with `$addToSet` and `$pull`
-- User validation (mocked with middleware for current testing)
-- Centralized error handling with consistent status codes
-- Clean RESTful routing using Express Router
-- Environment-aware logging (production vs. test)
-- Linting with ESLint
-- User Ownership: Only the owner of a clothing item can delete it.
+- Users: signup, signin (JWT), get/update current user
 
-## Authentication
+- Clothing items: list, create, delete (owner-only), like/unlike
 
-- POST /signup to create a new user.
-- POST /signin to log in a user and get a JWT token.
-- GET /users/me to return the logged-in user's profile.
-- PATCH /users/me to update the logged-in user's profile (name, avatar).
+- Input validation with celebrate/Joi + custom URL validator (validator.isURL)
 
-## Authorization
+- Centralized error handling with custom error classes
 
-- JWT authentication for protected routes.
-- Only authenticated users can create, delete, and like/unlike clothing items.
+- Request & error logging via winston / express-winston (file + console)
+
+- CORS enabled (currently permissive; adjust as needed)
+
+- Production hardening: PM2, nginx reverse proxy, HTTPS (Let’s Encrypt/       Certbot)
+
+## Tech Stack
+
+- Node.js, Express
+
+- MongoDB 8.x, Mongoose
+
+- JWT (auth), bcryptjs (password hashing)
+
+- celebrate/Joi, validator (validation)
+
+- winston, express-winston (logging)
+
+## API Overview
+### Auth
+
+- POST /signup — Create user { name, avatar, email, password }
+
+- POST /signin — Login { email, password } → { token }
+
+## Users
+
+- GET /users/me — Get current user
+
+- PATCH /users/me — Update { name, avatar }
+
+### Items
+
+- GET /items — List all items (public)
+
+- POST /items — Create { name, imageUrl, weather } (auth)
+
+- DELETE /items/:itemId — Delete (owner-only, auth)
+
+- PUT /items/:itemId/likes — Like (auth)
+
+- DELETE /items/:itemId/likes — Unlike (auth)
+
+Auth header: Authorization: Bearer <JWT>
+
+## Validation
+
+Defined in middlewares/validation.js using celebrate/Joi with custom URL checks:
+
+- Items (create): name (2–30), imageUrl (URL), weather (string)
+
+- Users (signup): name (2–30), avatar (URL), email (email), password (required)
+
+- Login: email, password
+
+- IDs (params): 24-char hex (itemId, userId)
+
+Celebrate error middleware (app.use(errors())) is enabled before the centralized handler.
 
 ## Error Handling
 
-- Centralized error handling with consistent status codes.
+Centralized handler + custom error classes:
+
+- bad-request-err, unauthorized-err, forbidden-err, not-found-err,     conflict-err
+
+Typical response:
+
+{ "message": "Human-readable error message" }
 
 ## Logging
 
-- Environment-aware logging for different environments (production and test).
+middlewares/logger.js configures:
 
-## Clean RESTful Routing
+- Request logs: console (formatted) + request.log (JSON)
 
-- Routes for users and clothing items are handled in their respective controllers and organized with Express Router.
+- Error logs: console (formatted) + error.log (JSON)
 
-## Linting
+## Environment
 
-- ESLint configured to extend airbnb-base with an exception for \_id.
+The app reads environment variables via dotenv (loaded at the top of app.js).
 
-### Technologies
+Create a .env (not committed) on the server:
 
-- Node.js
-- Express
-- MongoDB + Mongoose
-- Postman (manual testing)
-- ESLint
-- JWT (JSON WEB TOKEN) (for authentication)
-- Validator Package (for input validation)
-- Bcryptjs (for password hashing)
+NODE_ENV=production
+JWT_SECRET=<your-256-bit-hex-key>
+PORT=3001  optional (defaults to 3001)
+
+
+JWT secret is required in production. Use:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'));“
+
+MongoDB: the app connects to mongodb://127.0.0.1:27017/wtwr_db (configured in app.js).
+Update there if you need a different URI.
+
+## Run Locally
+
+Prereqs: Node 20+ (works on 22), MongoDB running locally.
+
+git clone https://github.com/revellebrent/se_project_express.git
+cd se_project_express
+npm install
+npm start
+# Server: http://localhost:3001
+
+
+Quick checks:
+
+curl http://localhost:3001/items
+curl -X POST http://localhost:3001/items
+# → Authorization required
+
+## Deployment Notes (already configured)
+
+- Process manager: PM2 (pm2 start app.js, pm2 save, pm2 startup)
+
+- Reverse proxy: nginx
+
+- api.wardrobe411.csproject.org → proxies to Node on port 3001
+
+- wardrobe411.csproject.org & www.wardrobe411.csproject.org serve static frontend (/home/revellebrent/frontend)
+
+- HTTPS: Let’s Encrypt via Certbot (auto-renew)
+
+- Firewall: HTTP(80)/HTTPS(443) open; custom 3001 open internally
+
+## Project Structure (abridged)
+<details>
+<summary>Click to expand</summary>
+
+```text
+se_project_express/
+├─ app.js
+├─ controllers/
+│  ├─ items.js
+│  └─ users.js
+├─ middlewares/
+│  ├─ auth.js
+│  ├─ error-handler.js
+│  ├─ logger.js
+│  └─ validation.js
+├─ routes/
+│  ├─ index.js
+│  ├─ items.js
+│  └─ users.js
+├─ models/
+│  ├─ clothingItem.js
+│  └─ user.js
+├─ errors/
+│  ├─ bad-request-err.js
+│  ├─ conflict-err.js
+│  ├─ forbidden-err.js
+│  ├─ not-found-err.js
+│  └─ unauthorized-err.js
+├─ utils/
+│  └─ config.js
+├─ .gitignore
+├─ package.json
+└─ README.md
+
+## Reviewer Notes
+
+- Crash recovery: GET /crash-test will crash the app; PM2 restarts automatically.
+
+- Frontend uses API at: https://api.wardrobe411.csproject.org (via process.env.NODE_ENV === "production" switch)
