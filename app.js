@@ -4,7 +4,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const { errors } = require("celebrate");
-const winston = require("winston");
 
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
@@ -31,7 +30,7 @@ mongoose
   .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
     if (process.env.NODE_ENV !== "test") {
-      winston.info("Connected to MongoDB");
+      console.log("Connected to MongoDB");
     }
   })
   .catch(console.error);
@@ -47,6 +46,6 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   if (process.env.NODE_ENV !== "test") {
-    winston.info(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
   }
 });
