@@ -3,10 +3,12 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { errors } = require("celebrate");
+const winston = require("winston");
+
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
 const NotFoundError = require("./errors/not-found-err");
-const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 const app = express();
@@ -17,9 +19,9 @@ app.use(express.json());
 
 app.use(requestLogger);
 
-app.get('/crash-test', () => {
+app.get("/crash-test", () => {
   setTimeout(() => {
-    throw new Error('Server will crash now');
+    throw new Error("Server will crash now");
   }, 0);
 });
 
@@ -29,7 +31,7 @@ mongoose
   .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
     if (process.env.NODE_ENV !== "test") {
-      console.log("Connected to MongoDB");
+      winston.info("Connected to MongoDB");
     }
   })
   .catch(console.error);
@@ -45,6 +47,6 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   if (process.env.NODE_ENV !== "test") {
-    console.log(`Server is running on port ${PORT}`);
+    winston.info(`Server is running on port ${PORT}`);
   }
 });

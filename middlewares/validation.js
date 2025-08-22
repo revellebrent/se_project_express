@@ -19,13 +19,21 @@ const validateCardBody = celebrate({
       "string.empty": 'The "imageUrl" field must be filled in',
       "string.uri": 'The "imageUrl" field must be a valid URL',
     }),
-    weather: Joi.string().required(),
+    weather: Joi.string().valid("hot", "warm", "cold").required().messages({
+      "any.only":
+        'The "weather" field must be one of the following values: hot, warm, cold',
+      "string.empty": 'The "weather" field must be filled in',
+    }),
   }),
 });
 
 const validateUserBody = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
+    name: Joi.string().required().min(2).max(30).messages({
+      "string.min": 'The minimum length of the "name" field is 2',
+      "string.max": 'The maximum length of the "name" field is 30',
+      "string.empty": 'The "name" field must be filled in',
+    }),
     avatar: Joi.string().required().custom(validateURL).messages({
       "string.empty": 'The "avatar" field must be filled in',
       "string.uri": 'The "avatar" field must be a valid URL',
@@ -64,6 +72,13 @@ const validateUserId = celebrate({
   }),
 });
 
+const validateProfileUpdate = celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    avatar: Joi.string().required().custom(validateURL),
+  }),
+});
+
 module.exports = {
   validateURL,
   validateCardBody,
@@ -71,4 +86,5 @@ module.exports = {
   validateLogin,
   validateItemId,
   validateUserId,
+  validateProfileUpdate,
 };
